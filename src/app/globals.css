@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-fa: "Vazirmatn", sans-serif;
+  --color-ink: #07090c;
+  --color-ink-2: #10141b;
+  --color-paper: #f3ecdc;
+  --color-paper-dim: #cfc6b0;
+  --color-gold: #d7a441;
+  --color-gold-2: #f0d18a;
+  --color-teal: #2ec9a5;
+  --color-rose: #e25d5d;
+  --color-line: rgba(243, 236, 220, 0.12);
+}
+
+html {
+  background: #07090c;
+  color: #f3ecdc;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(215, 164, 65, 0.16), transparent 55%),
+    radial-gradient(900px 500px at -10% 20%, rgba(46, 201, 165, 0.08), transparent 50%),
+    #07090c;
+  color: #f3ecdc;
+}
+
+::selection {
+  background: #d7a441;
+  color: #07090c;
+}
+
+.font-display {
+  font-family: var(--font-display), "Times New Roman", serif;
+}
+
+.font-mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.font-fa {
+  font-family: var(--font-fa), Tahoma, sans-serif;
+}
+
+.geo-grid {
+  background-image:
+    linear-gradient(rgba(243, 236, 220, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(243, 236, 220, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.star-mask {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath fill='none' stroke='%23d7a441' stroke-opacity='0.18' stroke-width='0.8' d='M40 4 L46 28 L70 28 L50 42 L58 66 L40 52 L22 66 L30 42 L10 28 L34 28 Z'/%3E%3C/svg%3E");
+}
+
+.gold-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d7a441, transparent);
+}
+
+.ticker-track {
+  display: flex;
+  gap: 2.5rem;
+  width: max-content;
+  animation: marquee 42s linear infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.panel {
+  border: 1px solid rgba(243, 236, 220, 0.12);
+  background: rgba(16, 20, 27, 0.72);
+  backdrop-filter: blur(16px);
+}
+
+.hairline {
+  border-color: rgba(243, 236, 220, 0.12);
+}

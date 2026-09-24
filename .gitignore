@@ -1,0 +1,45 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# production
+build/
+dist/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# typescript
+*.tsbuildinfo
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# os/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# python (skill scripts run from the repo root)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ruff_cache/
+.pytest_cache/
+
+# pytse-client on-disk caches created when running the skill scripts locally
+tickers_data/
+client_types_data/
+financial_index_data/
+adjusted_data/

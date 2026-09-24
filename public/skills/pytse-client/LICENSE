@@ -1,0 +1,5 @@
+This Agent Skill packages instructions and scripts around pytse-client
+(https://github.com/Glyphack/pytse-client), which is licensed under GNU GPL v3.
+
+The Python client remains GPLv3. Treat derived runtime use accordingly.
+See https://www.gnu.org/licenses/gpl-3.0.html

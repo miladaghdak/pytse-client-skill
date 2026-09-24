@@ -1,0 +1,339 @@
+{
+  "skill": "pytse-client",
+  "source": "https://github.com/Glyphack/pytse-client",
+  "source_version": "0.19.1",
+  "version": "1.0.0",
+  "tools": [
+    "all_symbols",
+    "resolve_symbol",
+    "download_history",
+    "download_client_types",
+    "download_financial_indexes",
+    "financial_index_snapshot",
+    "ticker_snapshot",
+    "ticker_realtime",
+    "ticker_shareholders",
+    "ticker_shareholders_history",
+    "ticker_trade_details",
+    "get_trade_details",
+    "get_orderbook",
+    "get_asks_and_bids",
+    "get_stats",
+    "ticker_total_shares_history"
+  ],
+  "toolSchemas": {
+    "all_symbols": {
+      "category": "universe",
+      "summary": "List every symbol known to pytse-client (from bundled symbols_name.json plus live appends).",
+      "pythonApi": "pytse_client.all_symbols()",
+      "script": null,
+      "inputSchema": { "type": "object", "properties": {} },
+      "outputHint": "string[] of Persian symbols"
+    },
+    "resolve_symbol": {
+      "category": "universe",
+      "summary": "Resolve a Persian name to TSETMC index, ISIN-adjacent ids, and old indexes for delisted rows.",
+      "pythonApi": "pytse_client.download.get_symbol_info(symbol)",
+      "script": "scripts/resolve_symbol.py",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Persian ticker symbol, e.g. فولاد or وبملت. Arabic letters are normalized."
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputHint": "{ symbol, index, name, old[] }"
+    },
+    "download_history": {
+      "category": "history",
+      "summary": "Download daily OHLCV for one, many, or all symbols. Optional Jalali column and split-adjusted prices.",
+      "pythonApi": "tse.download(symbols, write_to_csv=False, include_jdate=False, adjust=False)",
+      "script": "scripts/download_history.py",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Persian ticker symbol, e.g. فولاد or وبملت. Arabic letters are normalized."
+          },
+          "adjust": {
+            "type": "boolean",
+            "description": "Apply capital-increase / dividend performance adjustment.",
+            "default": false
+          },
+          "include_jdate": {
+            "type": "boolean",
+            "description": "Append Jalali jdate column.",
+            "default": false
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Max rows to return, most-recent first after reverse."
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputHint": "Array of {date,open,high,low,close,adjClose,yesterday,volume,count,value} (+jdate when include_jdate=True)"
+    },
+    "download_client_types": {
+      "category": "flow",
+      "summary": "Retail (حقیقی) vs institutional (حقوقی) daily buy/sell counts, volumes, values, and ownership change.",
+      "pythonApi": "tse.download_client_types_records(symbols, write_to_csv=False, include_jdate=False)",
+      "script": "scripts/client_types.py",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Persian ticker symbol, e.g. فولاد or وبملت. Arabic letters are normalized."
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputHint": "Daily client-type records including individual_ownership_change"
+    },
+    "download_financial_indexes": {
+      "category": "index",
+      "summary": "Download OHLCV history for TSE financial indexes, or all of them.",
+      "pythonApi": "tse.download_financial_indexes(symbols, write_to_csv=False, include_jdate=False)",
+      "script": "scripts/financial_index.py",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Index name matching indices_name.json (Arabic-normalized), e.g. \"شاخص كل\", or \"all\". Persian letters are normalized via replace_persian before lookup."
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputHint": "OHLCV + date + jdate"
+    },
+    "financial_index_snapshot": {
+      "category": "index",
+      "summary": "Live-ish snapshot of an index: last_value, last_update, high, low, history, intraday_price.",
+      "pythonApi": "tse.FinancialIndex(symbol)",
+      "script": "scripts/financial_index.py",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Arabic-normalized index name such as \"شاخص كل\" — the constructor does NOT normalize Persian letters."
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputHint": "{ last_value, last_update, high, low, history[] }"
+    },
+    "ticker_snapshot": {
+      "category": "ticker",
+      "summary": "Full Ticker board: title, group, EPS, P/E, NAV, float, market cap, best bid/ask, state, last prices.",
+      "pythonApi": "tse.Ticker(symbol, index=None, adjust=False)",
+      "script": "scripts/ticker_snapshot.py",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Persian ticker symbol, e.g. فولاد or وبملت. Arabic letters are normalized."
+          },
+          "index": {
+            "type": "string",
+            "description": "TSETMC instrument index — pass for delisted symbols via Ticker('', index=…)."
+          },
+          "adjust": {
+            "type": "boolean",
+            "description": "Load adjusted history.",
+            "default": false
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputHint": "Fundamentals + last trade fields + best demand/supply"
+    },
+    "ticker_realtime": {
+      "category": "ticker",
+      "summary": "Five-level live book plus last trade, state, and حقیقی/حقوقی trade summaries.",
+      "pythonApi": "ticker.get_ticker_real_time_info_response()",
+      "script": "scripts/ticker_snapshot.py",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Persian ticker symbol, e.g. فولاد or وبملت. Arabic letters are normalized."
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputHint": "RealtimeTickerInfo with buy_orders, sell_orders, individual/corporate summaries"
+    },
+    "ticker_shareholders": {
+      "category": "ownership",
+      "summary": "Current major shareholders table. Float ≈ 100 - sum(percentage).",
+      "pythonApi": "ticker.shareholders",
+      "script": "scripts/ticker_snapshot.py",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Persian ticker symbol, e.g. فولاد or وبملت. Arabic letters are normalized."
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputHint": "[{ id, shareholder, shares, percentage, change }]"
+    },
+    "ticker_shareholders_history": {
+      "category": "ownership",
+      "summary": "Daily major-holder history. Slow. Do not parallelize across symbols.",
+      "pythonApi": "ticker.get_shareholders_history(from_when, to_when, only_trade_days=True)",
+      "script": null,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Persian ticker symbol, e.g. فولاد or وبملت. Arabic letters are normalized."
+          },
+          "days": {
+            "type": "integer",
+            "description": "Lookback in days (default 90).",
+            "default": 90
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputHint": "Rows of date, shareholder_id, shares, percentage, name, change"
+    },
+    "ticker_trade_details": {
+      "category": "intraday",
+      "summary": "Last trading day's tick tape for a symbol (time, volume, price).",
+      "pythonApi": "ticker.get_trade_details()",
+      "script": null,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Persian ticker symbol, e.g. فولاد or وبملت. Arabic letters are normalized."
+          },
+          "index": {
+            "type": "string",
+            "description": "TSETMC instrument index — pass for delisted symbols via Ticker('', index=…)."
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputHint": "[{ date: HH:MM:SS, volume, price }] — last session's ticks only"
+    },
+    "get_trade_details": {
+      "category": "intraday",
+      "summary": "Historical ticks or aggregated intraday bars (30s, 1m, 5m, 10m, 15m, 30m, 1h) for a date range.",
+      "pythonApi": "tse.get_trade_details(symbol, start_date, end_date=None, to_csv=False, timeframe=None, aggregate=False)",
+      "script": "scripts/get_trade_details.py",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Persian ticker symbol, e.g. فولاد or وبملت. Arabic letters are normalized."
+          },
+          "start_date": {
+            "type": "string",
+            "description": "YYYY-MM-DD"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "YYYY-MM-DD"
+          },
+          "timeframe": {
+            "type": "string",
+            "description": "Aggregation bucket.",
+            "enum": ["30s", "1m", "5m", "10m", "15m", "30m", "1h"]
+          },
+          "aggregate": {
+            "type": "boolean",
+            "description": "Collapse to a single DataFrame.",
+            "default": false
+          }
+        },
+        "required": ["symbol", "start_date"]
+      },
+      "outputHint": "Ticks or OHLCV bars keyed by day unless aggregate=True"
+    },
+    "get_orderbook": {
+      "category": "intraday",
+      "summary": "Historical five-level order book between two dates. Optional diff-only faster payload.",
+      "pythonApi": "tse.get_orderbook(symbol, start_date, end_date=None, to_csv=False, ignore_date_validation=False, diff_orderbook=False, async_requests=True)",
+      "script": "scripts/get_orderbook.py",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Persian ticker symbol, e.g. فولاد or وبملت. Arabic letters are normalized."
+          },
+          "start_date": {
+            "type": "string",
+            "description": "YYYY-MM-DD"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "YYYY-MM-DD"
+          },
+          "diff_orderbook": {
+            "type": "boolean",
+            "description": "Store only book deltas (faster, less explicit).",
+            "default": false
+          }
+        },
+        "required": ["symbol", "start_date"]
+      },
+      "outputHint": "dict[date -> DataFrame] of bid/ask levels"
+    },
+    "get_asks_and_bids": {
+      "category": "intraday",
+      "summary": "Market-wide top-of-book snapshot from MarketWatchInit — no symbol parameter; filter the returned frame by symbol.",
+      "pythonApi": "tse.get_asks_and_bids(to_csv=False, base_path=None)",
+      "script": null,
+      "inputSchema": { "type": "object", "properties": {} },
+      "outputHint": "Market-wide DataFrame: id, row_number, num_of_sellers, number_of_buyers, buy_price, sell_price, buy_volume, sell_volume, symbol"
+    },
+    "get_stats": {
+      "category": "screener",
+      "summary": "Universe key statistics used for TSETMC filter-writing: averages, client types, market-watch fields.",
+      "pythonApi": "tse.get_stats(base_path=None, to_csv=False)",
+      "script": "scripts/get_stats.py",
+      "inputSchema": { "type": "object", "properties": {} },
+      "outputHint": "DataFrame of key stats + client types + market watch for all known symbols"
+    },
+    "ticker_total_shares_history": {
+      "category": "ownership",
+      "summary": "Async history of share count (capital increases).",
+      "pythonApi": "await ticker.get_total_shares_history_async(from_when, to_when, only_open_days=True)",
+      "script": null,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Persian ticker symbol, e.g. فولاد or وبملت. Arabic letters are normalized."
+          },
+          "days": {
+            "type": "integer",
+            "description": "Lookback days (default 60).",
+            "default": 60
+          }
+        },
+        "required": ["symbol"]
+      },
+      "outputHint": "[{ date, total_shares }]"
+    }
+  }
+}

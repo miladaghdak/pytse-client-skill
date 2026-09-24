@@ -1,0 +1,47 @@
+{
+  "name": "pytse-client-skill",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Skill Studio for the pytse-client agent skill — Tehran Stock Exchange (TSETMC) data tooling for coding agents, with a synthetic-data playground, evals, and install docs.",
+  "license": "MIT",
+  "author": "Milad Aghdak (https://github.com/MiladAghdak)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MiladAghdak/pytse-client-skill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MiladAghdak/pytse-client-skill/issues"
+  },
+  "homepage": "https://github.com/MiladAghdak/pytse-client-skill#readme",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
+  },
+  "dependencies": {
+    "dotenv": "17.3.1",
+    "drizzle-orm": "0.45.2",
+    "next": "16.2.6",
+    "pg": "8.20.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.1.17",
+    "@types/node": "22.19.15",
+    "@types/pg": "8.18.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "drizzle-kit": "0.31.10",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.2.6",
+    "postcss": "8.5.8",
+    "tailwindcss": "4.1.17",
+    "typescript": "5.9.3"
+  }
+}
