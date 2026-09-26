@@ -1,4 +1,6 @@
 import { invokeTool } from "@/lib/invoke";
+import { invokeLiveTool } from "@/lib/live-invoke";
+import { getMode, isLive } from "@/lib/mode";
 import {
   clientKey,
   isRateLimited,
@@ -33,7 +35,11 @@ export async function POST(request: Request) {
   const input = body.input ?? body.arguments ?? {};
 
   const started = Date.now();
-  const result = await invokeTool(tool, input);
+  // Demo off means live: this server fetches TSETMC itself rather than
+  // pointing the visitor at an install step.
+  const result = isLive(await getMode())
+    ? await invokeLiveTool(tool, input)
+    : await invokeTool(tool, input);
   const latency = Date.now() - started;
 
   const invocationId = await logInvocation({

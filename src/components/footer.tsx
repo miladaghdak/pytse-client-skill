@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+const REPO_URL = "https://github.com/MiladAghdak/pytse-client-skill";
+
 export function Footer() {
   return (
     <footer className="border-t border-[rgba(243,236,220,0.1)] px-5 py-10">
@@ -7,14 +9,29 @@ export function Footer() {
         <div>
           <p className="font-display text-2xl text-paper">pytse-client Skill Studio</p>
           <p className="mt-2 max-w-xl text-sm text-paper-dim">
-            An Agent Skills package wrapping{" "}
+            An Agent Skills package that wraps{" "}
             <a className="text-gold underline-offset-4 hover:underline" href="https://github.com/Glyphack/pytse-client">
               Glyphack/pytse-client
             </a>{" "}
-            for Tehran Stock Exchange. Upstream license GPLv3. Studio corpus is educational.
+            for the Tehran Stock Exchange. Upstream license: GPL-3.0. The studio corpus
+            is educational and entirely synthetic.
+          </p>
+          <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.16em] text-paper-dim">
+            Built by{" "}
+            <a className="text-gold underline-offset-4 hover:underline" href="https://github.com/MiladAghdak">
+              Milad Aghdak
+            </a>
+            <span aria-hidden="true"> · </span>
+            <a className="text-gold underline-offset-4 hover:underline" href={REPO_URL}>
+              github.com/MiladAghdak/pytse-client-skill
+            </a>
           </p>
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-2 font-mono text-[11px] uppercase tracking-[0.16em] text-paper-dim">
+          <a className="text-paper" href={REPO_URL}>
+            Source repo
+          </a>
+          <a href={`${REPO_URL}/issues`}>Report an issue</a>
           <Link href="/skill">SKILL.md</Link>
           <Link href="/api/skill">Catalog JSON</Link>
           <Link href="/api/health">Health</Link>

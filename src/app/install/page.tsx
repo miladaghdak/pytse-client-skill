@@ -7,7 +7,7 @@ const HOSTS = [
   {
     name: "Claude Code",
     path: "~/.claude/skills/pytse-client/",
-    extra: "or .claude/skills/pytse-client/ inside a repo",
+    extra: "or .claude/skills/pytse-client/ inside a project",
   },
   {
     name: "Cursor",
@@ -34,9 +34,10 @@ export default function InstallPage() {
       </p>
       <h1 className="mt-3 font-display text-5xl text-paper">Install the skill</h1>
       <p className="mt-4 max-w-2xl text-paper-dim">
-        Copy the folder so the directory name is exactly <code className="text-gold">pytse-client</code>.
-        Then <code className="text-gold">pip install pytse-client</code> in the runtime the agent
-        executes scripts in.
+        Copy the skill folder into the skills directory of your host, keeping the folder name
+        exactly <code className="text-gold">pytse-client</code>. Then install the runtime in
+        the environment where the agent executes scripts:{" "}
+        <code className="text-gold">pip install pytse-client</code>.
       </p>
 
       <section className="mt-10 grid gap-4 md:grid-cols-2">
@@ -55,7 +56,7 @@ export default function InstallPage() {
 git clone https://github.com/MiladAghdak/pytse-client-skill.git
 # 2) copy the skill folder into your host's skills directory
 cp -r pytse-client-skill/public/skills/pytse-client ~/.claude/skills/pytse-client
-# 3) install the runtime the scripts execute in
+# 3) install the Python library the scripts import
 pip install pytse-client`}</pre>
       </section>
 

@@ -32,6 +32,10 @@ export function Playground({
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string>("// invoke a tool to see JSON");
   const [meta, setMeta] = useState<string>("idle");
+  // The badge reports what the server actually did, not what the toggle claims.
+  // A live tool can still answer with a per-call error, and the JSON below it
+  // is where the visitor reads the real source.
+  const [source, setSource] = useState<"demo" | "live" | null>(null);
 
   const needsSymbol = Boolean(tool?.inputSchema.properties.symbol);
   const needsDates = Boolean(
@@ -52,7 +56,8 @@ export function Playground({
     }
     if (needsTf) input.timeframe = timeframe;
     if (tool.name === "download_financial_indexes" || tool.name === "financial_index_snapshot") {
-      input.symbol = symbol.startsWith("شاخص") ? symbol : "شاخص کل";
+      // Exact upstream spellings from indices_name.json (Arabic kaf).
+      input.symbol = symbol.startsWith("شاخص") ? symbol : "شاخص كل";
     }
     try {
       const res = await fetch("/api/tools/invoke", {
@@ -62,6 +67,7 @@ export function Playground({
       });
       const json = await res.json();
       setMeta(`${json.ok ? "ok" : "err"} · ${json.latency_ms ?? "?"}ms · ${tool.name}`);
+      setSource(json.source === "live-tsetmc" ? "live" : "demo");
       setResult(JSON.stringify(json, null, 2));
     } catch (err) {
       setMeta("network error");
@@ -104,8 +110,8 @@ export function Playground({
                   {s}
                 </option>
               ))}
-              <option value="شاخص کل">شاخص کل</option>
-              <option value="شاخص کل هم وزن">شاخص کل هم وزن</option>
+              <option value="شاخص كل">شاخص كل</option>
+              <option value="شاخص كل (هم وزن)">شاخص كل (هم وزن)</option>
             </select>
           </label>
         ) : null}
@@ -179,9 +185,15 @@ export function Playground({
         <div className="flex items-center justify-between gap-4">
           <span className="flex items-center gap-3">
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-gold">Response</p>
-            <span className="border border-gold/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-gold">
-              Demo data
-            </span>
+            {source === "live" ? (
+              <span className="border border-teal/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-teal">
+                Live TSETMC
+              </span>
+            ) : (
+              <span className="border border-gold/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-gold">
+                {source === "demo" ? "Demo data" : "Run a tool"}
+              </span>
+            )}
           </span>
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-paper-dim">{meta}</p>
         </div>

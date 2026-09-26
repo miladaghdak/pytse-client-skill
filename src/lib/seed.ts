@@ -43,12 +43,77 @@ function book(last: number, rand: () => number): {
   return { buy, sell };
 }
 
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+const evalKey = (c: {
+  prompt: string;
+  language: string;
+  shouldTrigger: boolean;
+  expectedTool: string | null;
+  notes: string;
+}) => JSON.stringify([c.prompt, c.language, c.shouldTrigger, c.expectedTool, c.notes]);
+
+const fileKey = (f: { path: string; kind: string; title: string; summary: string; loadWhen: string }) =>
+  JSON.stringify([f.path, f.kind, f.title, f.summary, f.loadWhen]);
+
+/**
+ * Catalog drift repair: the catalog in src/lib/catalog.ts changes between
+ * releases, but a database seeded by an earlier release keeps its old eval
+ * prompts and file list forever. Rebuild whichever catalog-backed table
+ * drifted. Runs once per process inside the seeding transaction.
+ */
+async function syncCatalogTables(tx: Tx, skillId: number): Promise<void> {
+  const wantFiles = SKILL_FILES.map(fileKey).sort().join("\n");
+
+  const fileRows = await tx
+    .select({
+      path: skillFiles.path,
+      kind: skillFiles.kind,
+      title: skillFiles.title,
+      summary: skillFiles.summary,
+      loadWhen: skillFiles.loadWhen,
+    })
+    .from(skillFiles);
+  if (fileRows.map(fileKey).sort().join("\n") !== wantFiles) {
+    await tx.delete(skillFiles);
+    await tx.insert(skillFiles).values(
+      SKILL_FILES.map((f) => ({
+        skillId,
+        path: f.path,
+        kind: f.kind,
+        title: f.title,
+        summary: f.summary,
+        loadWhen: f.loadWhen,
+      })),
+    );
+  }
+
+  const wantEvals = EVAL_CASES.map(evalKey).sort().join("\n");
+
+  const evalRows = await tx
+    .select({
+      prompt: evalCases.prompt,
+      language: evalCases.language,
+      shouldTrigger: evalCases.shouldTrigger,
+      expectedTool: evalCases.expectedTool,
+      notes: evalCases.notes,
+    })
+    .from(evalCases);
+  if (evalRows.map(evalKey).sort().join("\n") !== wantEvals) {
+    await tx.delete(evalCases);
+    await tx.insert(evalCases).values(EVAL_CASES);
+  }
+}
+
 async function seedInternal(): Promise<void> {
   await db.transaction(async (tx) => {
     // Serialize concurrent cold starts: the second instance re-checks and exits.
     await tx.execute(sql`select pg_advisory_xact_lock(727272)`);
     const existing = await tx.select({ id: skills.id }).from(skills).limit(1);
-    if (existing.length > 0) return;
+    if (existing.length > 0) {
+      await syncCatalogTables(tx, existing[0].id);
+      return;
+    }
 
     const [skill] = await tx
       .insert(skills)

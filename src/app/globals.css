@@ -87,3 +87,12 @@ body {
 .hairline {
   border-color: rgba(243, 236, 220, 0.12);
 }
+
+/* Demo mode. The inline boot script in the root layout sets html[data-demo]
+   from the mode cookie before first paint; the toggle flips the attribute and
+   reloads. Nothing is hidden by the attribute any more: with demo off these
+   surfaces carry real TSETMC data, so only the per-section fallback panel
+   needs a rule of its own. */
+[data-live-fallback] {
+  display: block;
+}

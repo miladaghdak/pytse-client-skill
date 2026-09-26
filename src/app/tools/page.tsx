@@ -26,7 +26,7 @@ export default async function ToolsPage() {
             <h2 className="font-mono text-[11px] uppercase tracking-[0.24em] text-gold">{cat}</h2>
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
               {TOOLS.filter((t) => t.category === cat).map((t) => (
-                <article key={t.name} className="panel p-5">
+                <article key={t.name} className="panel min-w-0 p-5">
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="font-mono text-sm text-paper">{t.name}</h3>
                     <Link

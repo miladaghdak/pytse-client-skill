@@ -14,11 +14,19 @@ import { formatJdate } from "@/lib/jalali";
 import { normalizeFa } from "@/lib/persian";
 import { hashString, mulberry32 } from "@/lib/rng";
 
+/**
+ * Where an answer came from.
+ *
+ * `skill-studio-demo` is the deterministic synthetic corpus. `live-tsetmc` is
+ * this server's own fetch of the real exchange — see `live.ts`.
+ */
+export type InvokeSource = "skill-studio-demo" | "live-tsetmc";
+
 export type InvokeResult = {
   ok: boolean;
   tool: string;
-  source: "skill-studio-demo";
-  demo: true;
+  source: InvokeSource;
+  demo: boolean;
   data?: unknown;
   error?: string;
   hint?: string;

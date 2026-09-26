@@ -15,7 +15,7 @@ it is listed as unverified rather than assumed correct.
 | Lint | `pnpm lint` | **pass** — no findings |
 | Offline runtime self-test | `scripts/smoke.py` | **pass** — `pytse-client 0.19.1`, pandas 3.0.6, jdatetime 3.8.2, bs4 4.15.0, lxml 4.9.4, 1394 symbols, 55 indices |
 | Symbol resolution | `symbols_data.get_ticker_index("فولاد")` | **pass** — `46348559193224090` |
-| Live database | `pnpm db:push` + `ensureSeeded()` against Neon | **pass** — 12 tables, 2,631 rows; see section 8 |
+| Live database | `pnpm db:push` + `ensureSeeded()` against Neon | **pass** — 12 tables, 2,630 rows after the pass-2 catalog sync; see sections 8–9 |
 
 The build emits no workspace-root warning. `next.config.ts` pins
 `turbopack.root`, because Turbopack otherwise adopts a parent directory that
@@ -130,16 +130,25 @@ from `smoke.py` above confirms the correction at runtime.
   three times and each failed immediately with an HTTP 403 from the configured
   subagent model endpoint. The checks in this report were run directly instead.
   The fan-out itself is unverified.
-- **No live TSETMC calls were made.** Network access is restricted on the
-  verification machine, so column shapes were confirmed against source code and
-  against the bundled `symbols_name.json` / `indices_name.json`, not against a
-  live response.
-- **No HTTP request was ever served.** The studio is verified against a live
-  database (section 8) but not over HTTP: `next/font/google` could not fetch its
-  font files within Next's internal timeout, so `src/app/layout.tsx` fails to
-  compile and every route returns 500. This is the font limitation below, not a
-  database or application defect — all 12 tables were created, seeded, and read
-  back successfully through the same Drizzle client the routes use.
+- **Live TSETMC calls and served HTTP requests are covered in section 9.** The
+  original pass could make neither, because network access and Google Fonts
+  fetching were both unavailable on that machine. Both were resolved in a later
+  pass: the app now builds and serves every route, and live mode was verified
+  against real TSETMC responses. The font caveat below still applies to
+  fully-offline builds.
+- **Live history is raw, not split-adjusted.** `Export-txt.aspx` does carry a
+  `yesterday` column (`<OPEN>`, which despite the tag holds the previous close)
+  and an `adjClose` column (`<CLOSE>`), and this layer parses both. What is *not*
+  reproduced is pytse-client's cumulative capital-increase adjustment, which is
+  applied in Python on top of the raw frame. Live pages and the
+  `download_history` tool say so where a reader will see it.
+- **TSETMC publishes no financial-index series over HTTP.** `IndexFinancial.aspx`,
+  `chart/data/IndexFinancial.aspx`, `InitIndex.aspx` and `Index.aspx` each answer
+  a financial index with the TSETMC site homepage; `Export-txt.aspx` and
+  `instinfofast.aspx` answer empty for an index code; and the market board carries
+  no index rows. The شاخص کل line is therefore demo-only, and
+  `download_financial_indexes` / `financial_index_snapshot` fail with an explicit
+  message rather than a fabricated series.
 - **`eslint.config.mjs` retains its upstream "starter" comment.** A
   config-protection hook blocked editing that file, so it is unchanged.
 - **`next build` requires network access to Google Fonts.** `src/app/layout.tsx`
@@ -181,7 +190,7 @@ still takes precedence.
 
 ### Operational note: seed the database before the first deploy
 
-`ensureSeeded()` writes all 2,631 rows in a single transaction, which took
+`ensureSeeded()` writes all 2,630 rows in a single transaction, which took
 **38 s** over the link to Frankfurt. On a Vercel cold start against an empty
 database that work would happen inside the request that needs it — and because
 `ensureSeeded()` clears `seedPromise` and rethrows on failure, a timeout would
@@ -189,3 +198,50 @@ make every subsequent request retry the entire seed. The seeded database is
 therefore part of the deploy, not an optimisation: **`pnpm db:push` must be run
 and a first request allowed to complete against the production database before
 the app is considered live.** This is what `DEPLOY.md` prescribes.
+
+## 9. Live-mode verification
+
+The studio was exercised with the demo switch **off**, so every surface below was
+answered by this server's own calls to TSETMC — the same URLs, user agents, and
+field mappings pytse-client v0.19.1 uses. No Python and no skill install were
+involved in producing any number on this page.
+
+| Check | Result |
+| --- | --- |
+| Production build | **pass** — `pnpm build` compiled cleanly; TypeScript and lint both clean before it |
+| `/`, `/tickers`, `/evals`, `/playground`, `/console` in both modes | **pass** — HTTP 200 in every combination, with zero `Not available right now` fallback panels |
+| Live markers | **pass** — `/` and `/tickers` show `Live TSETMC` when the switch is off and show no live marker when it is on |
+| `MarketWatchInit` board | **pass** — the whole board parses in one request; فولاد renders 3,250 / −2.99% / P/E 6.27 / range 3,250–3,390 / 8.20T, all cross-checked field-by-field against `instinfofast` for the same session |
+| `Export-txt.aspx` daily history | **pass** — 4,232 bars for فولاد (2007-03-11 → 2026-09-26), strictly descending by date, every bar satisfying `low ≤ open,close ≤ high` |
+| History field mapping | **pass** — the newest bar matches the live board on all 9 shared fields (open 3,390, high 3,390, low 3,250, close 3,250, adjClose 3,260, yesterday 3,350, count 31,636, volume 2,512,505,604, value 8,195,077,042,750) |
+| `POST /api/tools/invoke` (`download_history`) | **pass** — `source: "live-tsetmc"`, `demo: false`, real index `46348559193224090`; `limit` returns the most recent N days oldest-first, matching upstream's ascending sort and the demo engine |
+| Demo-mode invoke | **pass** — the same tool returns `source: "skill-studio-demo"`, `demo: true` |
+| Demo switch round-trip | **pass** — off → on → off updates `aria-checked`, the `demo-mode` cookie, and `localStorage` together, and re-renders the right mode |
+| Responsive layout at 375 px | **pass** — 0 px horizontal overflow on `/`, `/tickers`, `/evals`, and `/playground`, with the demo switch and GitHub link both still visible |
+| Browser console | **pass** — no application errors or warnings |
+| Repo attribution | **pass** — GitHub links present on every page in both modes |
+
+### Defect fixed in this pass: the history parser was off by one column
+
+The daily-candles panel reported `TSETMC returned no history rows` while
+`Export-txt.aspx` was returning a well-formed 442 KB CSV. The parser read the date
+from field 2 and the prices from fields 3–9, but TSETMC's wire layout puts the
+ticker in field 0, so the date is field 1 and the OHLCV block starts one column
+later — and `<LAST>` (field 11) and `<OPEN>` (field 10) were never read at all.
+Every row therefore failed the `^\d{8}$` date test and the parser returned an
+empty array, which surfaced as a panel-level fallback rather than as a parse
+error. The mapping is now the one in upstream `translations.py` and is verified
+against a live board as above.
+
+A second, smaller defect surfaced from the same fix: `download_history` applied
+`.slice(-limit)` to a newest-first array, so `limit=3` returned the three
+*oldest* sessions (2007) instead of the three most recent. It now slices from the
+front and reverses, matching both upstream's ascending sort and the demo engine.
+
+### Deliberate omissions
+
+Live mode omits a field rather than approximate it. Market cap, float, per-name
+year range, split adjustment, and the شاخص کل index line are absent from live
+surfaces, each with a note where a reader would otherwise expect them. This is a
+design choice, not a gap: a wrong number on a market page is worse than a
+labelled absence.

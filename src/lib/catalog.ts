@@ -193,13 +193,6 @@ export const SKILL_FILES = [
     loadWhen: "After install, to verify the runtime",
   },
   {
-    path: "scripts/ticker_snapshot.py",
-    kind: "script",
-    title: "ticker_snapshot.py",
-    summary: "CLI: fundamentals + last board for one symbol.",
-    loadWhen: "Execute, do not load into context",
-  },
-  {
     path: "assets/tools.json",
     kind: "asset",
     title: "tools.json",
@@ -554,87 +547,104 @@ export const TOOLS: ToolDef[] = [
 
 export const EVAL_CASES = [
   {
-    prompt: "قیمت تعدیل‌شده فولاد را از ۲۰۲۰ تا امروز بگیر",
+    prompt:
+      "قیمت‌های روزانه فولاد را از ابتدای سال ۱۴۰۲ تا امروز به‌صورت تعدیل‌شده دانلود کن و در یک فایل CSV ذخیره کن.",
     language: "fa",
     shouldTrigger: true,
     expectedTool: "download_history",
-    notes: "Persian + adjust implied by تعدیل‌شده.",
+    notes:
+      "Routes to download_history with adjust=True and include_jdate=True; the agent maps the Jalali year start (۱۴۰۲) itself, since the call takes no date range.",
   },
   {
-    prompt: "Show Bank Mellat (وبملت) P/E, EPS, float and major holders",
+    prompt:
+      "Pull the current fundamentals for Bank Mellat (وبملت) — EPS, P/E, free float, and the five largest shareholders — and summarize them in one table.",
     language: "en",
     shouldTrigger: true,
     expectedTool: "ticker_snapshot",
-    notes: "Fundamentals + shareholders.",
+    notes:
+      "Routes to ticker_snapshot for the fundamentals, then ticker_shareholders for the holders; a correct answer separates the reported float from the float implied by 100 − Σ(major-holder percentages).",
   },
   {
-    prompt: "شاخص کل امروز چنده و از اول سال چقدر آمده؟",
+    prompt: "شاخص کل بورس تهران الان روی چند است؟ از ابتدای سال تاکنون چند درصد تغییر کرده؟",
     language: "fa",
     shouldTrigger: true,
     expectedTool: "financial_index_snapshot",
-    notes: "Index, not a stock.",
+    notes:
+      "An index, not a stock — must route to FinancialIndex, never Ticker. The year-to-date change needs index history, not today's snapshot. The library's index map spells the name with the Arabic kaf (كل), so the agent must resolve the Persian spelling (کل) it was given.",
   },
   {
-    prompt: "حقیقی‌ها امروز در خودرو خریدار بودند یا فروشنده؟",
+    prompt: "امروز در خودرو حقیقی‌ها خریدار بودند یا فروشنده؟ حجم خرید و فروش حقیقی‌ها را با هم مقایسه کن.",
     language: "fa",
     shouldTrigger: true,
     expectedTool: "download_client_types",
-    notes: "Retail vs institutional flow.",
+    notes:
+      "Routes to download_client_types; a correct answer compares individual (حقیقی) buy volume against sell volume for the latest session and reads the ownership change, not just the count.",
   },
   {
-    prompt: "Get 1-minute bars for اهرم between 19 Mar and 22 Apr 2023",
+    prompt: "Aggregate اهرم into 15-minute OHLCV bars covering March 19 to April 22, 2023.",
     language: "en",
     shouldTrigger: true,
     expectedTool: "get_trade_details",
-    notes: "Intraday aggregation.",
+    notes:
+      "Routes to get_trade_details with timeframe='15m' and aggregate=True; the dates are Gregorian, not Jalali.",
   },
   {
-    prompt: "Download five-level order book of خساپا for March 2023",
+    prompt:
+      "Fetch the five-level order book for خساپا on every trading day of March 2023; use the diff format to keep the payload small.",
     language: "en",
     shouldTrigger: true,
     expectedTool: "get_orderbook",
-    notes: "Historical book.",
+    notes:
+      "Routes to get_orderbook with diff_orderbook=True over the March 2023 range; the agent should pass ignore_date_validation because the month boundaries are not session boundaries.",
   },
   {
-    prompt: "Build a فیلترنویسی screen for high average buyers over 3 months",
+    prompt:
+      "می‌خواهم فیلتری بنویسم که نمادهایی را پیدا کند که میانگین حجم خرید حقیقی سه‌ماهه‌شان بالاتر از بقیه بازار است. آمارهای لازم را بگیر.",
     language: "fa",
     shouldTrigger: true,
     expectedTool: "get_stats",
-    notes: "Key stats universe.",
+    notes:
+      "The فیلترنویسی phrasing routes to get_stats, the key-stats universe — not a realtime board; a correct agent filters on the average individual-buy column over the last three months.",
   },
   {
-    prompt: "What is the free float of وبملت using major shareholders?",
+    prompt:
+      "Estimate the true free float of وبملت from its major-shareholder table, and say how it differs from the reported float.",
     language: "en",
     shouldTrigger: true,
     expectedTool: "ticker_shareholders",
-    notes: "100 - sum(percentage).",
+    notes:
+      "Routes to ticker_shareholders; expected reasoning is free float ≈ 100 − Σ(major-shareholder percentages), contrasted with the reported figure and the gap explained.",
   },
   {
-    prompt: "Fetch AAPL daily candles from Yahoo Finance",
+    prompt: "Fetch AAPL daily candles from Yahoo Finance and compute the 50-day moving average.",
     language: "en",
     shouldTrigger: false,
     expectedTool: null,
-    notes: "US equity — must NOT trigger this skill.",
+    notes: "US equity on a non-Iranian venue — must NOT activate this skill.",
   },
   {
-    prompt: "Plot BTC-USDT funding rate on Binance",
+    prompt: "Track the BTC-USDT funding rate on Binance over the last 24 hours.",
     language: "en",
     shouldTrigger: false,
     expectedTool: null,
-    notes: "Crypto — must NOT trigger.",
+    notes: "Crypto venue, outside TSETMC — must NOT activate this skill.",
   },
   {
-    prompt: "نماد حذف‌شده را با index دستی لود کن",
+    prompt:
+      "نماد مورد نظرم حذف شده و دیگر در جست‌وجو پیدا نمی‌شود. شماره instrument قدیمی‌اش را پیدا کن و آخرین وضعیتش را نشان بده.",
     language: "fa",
     shouldTrigger: true,
     expectedTool: "resolve_symbol",
-    notes: "Delisted path, index= required.",
+    notes:
+      "Delisted path: resolve_symbol still returns the old indexes for removed rows; the agent then loads Ticker with index= instead of searching by name.",
   },
   {
-    prompt: "Why did asyncio.run fail inside my FastAPI route for shareholders history?",
+    prompt:
+      "My asyncio.run() call inside a running FastAPI event loop fails while fetching shareholder history for فولاد, and TSETMC just rate-limited me. What is the correct call?",
     language: "en",
     shouldTrigger: true,
     expectedTool: "ticker_shareholders_history",
-    notes: "Must load pitfalls + async variant.",
+    notes:
+      "Routes to shareholders history plus the pitfalls reference; expected answer: await the *_async variant inside the existing loop instead of asyncio.run(), and fetch serially to stay under TSETMC's rate limit.",
   },
 ];

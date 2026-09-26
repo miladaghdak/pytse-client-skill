@@ -41,7 +41,12 @@ python pytse-client-skill/public/skills/pytse-client/scripts/smoke.py
 
 ## Skill Studio (the web app)
 
-Browse the full skill docs, try every tool against **deterministic synthetic demo data** (every response carries `demo: true` — the studio never proxies live TSETMC quotes), and copy install commands.
+Browse the full skill docs and copy install commands. A **demo switch in the header** picks the data source, and it changes what every surface actually returns:
+
+- **Demo on** — the studio serves its deterministic synthetic corpus; every tool response carries `demo: true`, so agent rehearsals are reproducible and never touch the exchange.
+- **Demo off** — the Next.js server itself calls the real TSETMC endpoints (the same URLs and parsing `pytse-client` uses), so the site shows live prices, candles, order books, حقیقی/حقوقی flow, and shareholders with nothing installed — no Python, no skill download. Tool responses carry `source: "live-tsetmc"` and `demo: false`.
+
+The switch is a server-side cookie, so live mode is correct on first paint. Where the live exchange cannot answer exactly the way the Python client does, the UI says so in place instead of showing a fabricated number.
 
 ### Run locally
 
@@ -58,7 +63,7 @@ The whole stack runs on free tiers — see [DEPLOY.md](./DEPLOY.md).
 
 ## Verification
 
-Every signature, column list, endpoint URL, and exception message in the skill was cross-checked against the pinned upstream v0.19.1 source, and every bundled script was audited for correct serialization and error handling. The studio was also exercised against a live Neon Postgres: schema pushed, 2,631 demo rows seeded, and every table read back through Drizzle. Methodology and results: [docs/VERIFICATION.md](./docs/VERIFICATION.md), which also records what was *not* verified — no live TSETMC request was made, and no HTTP request was served (see the Google Fonts note there).
+Every signature, column list, endpoint URL, and exception message in the skill was cross-checked against the pinned upstream v0.19.1 source, and every bundled script was audited for correct serialization and error handling. The studio was also exercised against a live Neon Postgres: schema pushed, 2,630 demo rows seeded, and every table read back through Drizzle. Live mode was then verified against the real exchange — a market board, 4,232 daily bars, and the invoke API, with each history field cross-checked field-by-field against the exchange's own board for the same session. Methodology and results: [docs/VERIFICATION.md](./docs/VERIFICATION.md), which also records what live mode deliberately leaves out and why.
 
 ## Licenses
 

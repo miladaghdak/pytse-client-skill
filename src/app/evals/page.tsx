@@ -14,14 +14,13 @@ export default async function EvalsPage() {
   return (
     <main className="mx-auto max-w-7xl px-5 py-16">
       <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-gold">
-        Description triggering
+        Description-triggered routing
       </p>
       <h1 className="mt-3 font-display text-5xl text-paper">Skill evals</h1>
       <p className="mt-4 max-w-2xl text-paper-dim">
         The description field is a router, not marketing copy. These cases check that
-        Iranian-market prompts activate pytse-client and that NYSE/crypto prompts do not.
-        {` `}
-        {pos} should-trigger · {rows.length - pos} should-not.
+        Iranian-market prompts activate pytse-client and that NYSE/crypto prompts do
+        not. {pos} must activate · {rows.length - pos} must ignore.
       </p>
       <ol className="mt-10 space-y-4">
         {rows.map((r, i) => (

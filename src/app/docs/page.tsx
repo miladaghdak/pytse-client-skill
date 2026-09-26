@@ -41,12 +41,12 @@ export default function DocsPage() {
       <h1 className="mt-3 font-display text-5xl text-paper">How an agent should work</h1>
       <p className="mt-4 max-w-2xl text-paper-dim">
         Follow SKILL.md, then open only the reference the decision tree names. Prefer
-        bundled scripts. Summarise DataFrames; never paste a 2,000-row pandas repr.
+        bundled scripts. Summarize DataFrames; never paste a 2,000-row pandas repr.
       </p>
 
       <section className="mt-12 grid gap-4 md:grid-cols-2">
         {SNIPPETS.map((s) => (
-          <article key={s.title} className="panel p-5">
+          <article key={s.title} className="panel min-w-0 p-5">
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-gold">{s.title}</p>
             <pre className="mt-3 overflow-x-auto font-mono text-[12px] leading-relaxed text-paper">
               {s.code}

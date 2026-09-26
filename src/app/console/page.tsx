@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import { desc } from "drizzle-orm";
 import { db } from "@/db";
 import { invocations } from "@/db/schema";
+import { getMode, isLive } from "@/lib/mode";
 import { ensureSeeded } from "@/lib/seed";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Console" };
 
 export default async function ConsolePage() {
+  const live = isLive(await getMode());
   await ensureSeeded();
   const rows = await db.select().from(invocations).orderBy(desc(invocations.createdAt)).limit(40);
 
@@ -18,8 +20,12 @@ export default async function ConsolePage() {
       </p>
       <h1 className="mt-3 font-display text-5xl text-paper">Console</h1>
       <p className="mt-4 max-w-2xl text-paper-dim">
-        Every playground and HTTP invoke is persisted. Use this to debug agent loops
-        and to see which tools fire on which prompts.
+        Every playground and HTTP invocation is logged with the tool, its latency, and the
+        mode it ran in. Use this page to debug agent loops and see which tools fire on
+        which prompts.
+      </p>
+      <p className="mt-3 font-mono text-[11px] text-paper-dim">
+        Currently running in {live ? "live TSETMC mode" : "synthetic demo mode"}.
       </p>
       <div className="mt-10 overflow-x-auto">
         <table className="w-full min-w-[720px] text-left text-sm">
